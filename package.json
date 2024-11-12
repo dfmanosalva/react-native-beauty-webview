@@ -1,12 +1,12 @@
 {
   "name": "react-native-beauty-webview",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "React-Native Beatuy Web View with different functionalty, and beauty ui",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "github": "https://github.com/ilkerkesici/react-native-assitive-touch",
+  "github": "https://github.com/dmanosalva/react-native-beauty-webview",
   "keywords": [
     "webview",
     "react-native-webview",
@@ -14,6 +14,21 @@
     "react-native instagram",
     "react-native copy link"
   ],
+  "peerDependencies": {
+    "@react-native-community/clipboard": "^1.5.1",
+    "react": "*",
+    "react-native": "^0.75.0",
+    "react-native-webview": "^13.12.3"
+  },
   "author": "İlker Kesici <ilkerrkesici@gmail.com> (https://github.com/ilkerkesici)",
-  "license": "ISC"
+  "license": "MIT",
+  "devDependencies": {
+    "@react-native/typescript-config": "0.75.1",
+    "@types/react": "^18.3.12",
+    "prettier": "2.8.8",
+    "typescript": "5.0.4"
+  },
+  "engines": {
+    "node": ">=18"
+  }
 }
