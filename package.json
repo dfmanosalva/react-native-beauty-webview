@@ -1,6 +1,6 @@
 {
-  "name": "react-native-beauty-webview",
-  "version": "3.0.0",
+  "name": "@dfmanosalva/react-native-beauty-webview",
+  "version": "3.0.1",
   "description": "React-Native Beatuy Web View with different functionalty, and beauty ui",
   "main": "index.js",
   "scripts": {
@@ -15,7 +15,7 @@
     "react-native copy link"
   ],
   "peerDependencies": {
-    "@react-native-community/clipboard": "^1.5.1",
+    "@react-native-clipboard/clipboard": "^1.15.0",
     "react": "*",
     "react-native": "^0.75.0",
     "react-native-webview": "^13.12.3"

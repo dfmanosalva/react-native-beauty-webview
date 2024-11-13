@@ -12,7 +12,7 @@ import {
   Alert,
 } from "react-native";
 import { images } from "../res";
-import Clipboard from "@react-native-community/clipboard";
+import Clipboard from "@react-native-clipboard/clipboard";
 import { ExtraMenuItem } from "..";
 
 type CustomMenuProps = {
