@@ -20,6 +20,7 @@ import React, {
   useRef,
   useState,
   useEffect,
+  useCallback,
 } from "react";
 import { colors } from "../res";
 
@@ -48,8 +49,9 @@ const SCREEN_INDENT = 8;
 const Menu = forwardRef<Menu, MenuProps>(
   ({ button, animationDuration = 300, children, style, onHidden }, ref) => {
     const viewRef = useRef<View>(null);
-    const { width: windowWidth, height } = useWindowDimensions();
-    const windowHeight = height - (StatusBar.currentHeight || 0);
+    const { width: windowWidth, height: windowsHeight } = useWindowDimensions();
+    const windowHeight = windowsHeight - (StatusBar.currentHeight || 0);
+    const [transforms, setTransforms] = useState<any[]>([]);
 
     const { isRTL } = I18nManager;
 
@@ -69,6 +71,8 @@ const Menu = forwardRef<Menu, MenuProps>(
       width: menuSizeAnimation.x,
       height: menuSizeAnimation.y,
     };
+
+    const [menuMounted, setMenuMounted] = useState(false);
 
     useEffect(() => {
       if (menuState === STATES.ANIMATING) {
@@ -96,17 +100,23 @@ const Menu = forwardRef<Menu, MenuProps>(
         }
       }
     }, [menuState]);
-
     // Start menu animation
-    const _onMenuLayout = (e: LayoutChangeEvent) => {
-      if (menuState === STATES.ANIMATING) {
-        return;
+    const _onMenuLayout = useCallback((e: LayoutChangeEvent) => {
+      if (!menuMounted) {
+        if (menuState === STATES.ANIMATING) {
+          return;
+        }
+        const { width, height } = e.nativeEvent.layout;
+        setMenuState(STATES.ANIMATING);
+        if (width !== menuWidth) {
+          setMenuWidth(width);
+        }
+        if (height !== menuHeight) {
+          setMenuHeight(height);
+        }
+        setMenuMounted(true);
       }
-      const { width, height } = e.nativeEvent.layout;
-      setMenuState(STATES.ANIMATING);
-      setMenuWidth(width);
-      setMenuHeight(height);
-    };
+    }, []);
 
     const _onDismiss = () => {
       if (onHidden) {
@@ -149,32 +159,37 @@ const Menu = forwardRef<Menu, MenuProps>(
       [show, hide]
     );
 
-    const transforms = [];
+    useEffect(() => {
+      if (menuMounted) {
+        const transforms1 = [];
 
-    if (
-      (isRTL && left + buttonWidth - menuWidth > SCREEN_INDENT) ||
-      (!isRTL && left + menuWidth > windowWidth - SCREEN_INDENT)
-    ) {
-      transforms.push({
-        translateX: Animated.multiply(menuSizeAnimation.x, -1),
-      });
+        if (
+          (isRTL && left + buttonWidth - menuWidth > SCREEN_INDENT) ||
+          (!isRTL && left + menuWidth > windowWidth - SCREEN_INDENT)
+        ) {
+          transforms1.push({
+            translateX: Animated.multiply(menuSizeAnimation.x, -1),
+          });
 
-      setLeft(Math.min(windowWidth - SCREEN_INDENT, left + buttonWidth));
-    } else if (left < SCREEN_INDENT) {
-      setLeft(SCREEN_INDENT);
-    }
+          setLeft(Math.min(windowWidth - SCREEN_INDENT, left + buttonWidth));
+        } else if (left < SCREEN_INDENT) {
+          setLeft(SCREEN_INDENT);
+        }
 
-    // Flip by Y axis if menu hits bottom screen border
-    if (top > windowHeight - menuHeight - SCREEN_INDENT) {
-      transforms.push({
-        translateY: Animated.multiply(menuSizeAnimation.y, -1),
-      });
+        // Flip by Y axis if menu hits bottom screen border
+        if (top > windowHeight - menuHeight - SCREEN_INDENT) {
+          transforms1.push({
+            translateY: Animated.multiply(menuSizeAnimation.y, -1),
+          });
 
-      setTop(windowHeight - SCREEN_INDENT);
-      setTop(Math.min(windowHeight - SCREEN_INDENT, top + buttonHeight));
-    } else if (top < SCREEN_INDENT) {
-      setTop(SCREEN_INDENT);
-    }
+          setTop(windowHeight - SCREEN_INDENT);
+          setTop(Math.min(windowHeight - SCREEN_INDENT, top + buttonHeight));
+        } else if (top < SCREEN_INDENT) {
+          setTop(SCREEN_INDENT);
+        }
+        setTransforms(transforms1);
+      }
+    }, [menuMounted]);
 
     const shadowMenuContainerStyle = {
       opacity: opacityAnimation,
@@ -185,16 +200,15 @@ const Menu = forwardRef<Menu, MenuProps>(
       ...(isRTL ? { right: left } : { left }),
     };
 
-    const animationStarted = menuState === STATES.ANIMATING;
-    const modalVisible = menuState === STATES.SHOWN || animationStarted;
-
     return (
       <View ref={viewRef} collapsable={false}>
         <View>{button}</View>
 
         <Modal
-          visible={modalVisible}
-          onRequestClose={() => hide()}
+          visible={menuState === STATES.SHOWN || menuState === STATES.ANIMATING}
+          onRequestClose={() => {
+            hide();
+          }}
           supportedOrientations={[
             "portrait",
             "portrait-upside-down",
@@ -205,7 +219,12 @@ const Menu = forwardRef<Menu, MenuProps>(
           transparent
           onDismiss={_onDismiss}
         >
-          <TouchableWithoutFeedback onPress={() => hide()} accessible={false}>
+          <TouchableWithoutFeedback
+            onPress={() => {
+              hide();
+            }}
+            accessible={false}
+          >
             <View style={StyleSheet.absoluteFill}>
               <Animated.View
                 onLayout={_onMenuLayout}
@@ -216,7 +235,10 @@ const Menu = forwardRef<Menu, MenuProps>(
                 ]}
               >
                 <Animated.View
-                  style={[styles.menuContainer, animationStarted && menuSize]}
+                  style={[
+                    styles.menuContainer,
+                    menuState === STATES.ANIMATING && menuSize,
+                  ]}
                 >
                   {children}
                 </Animated.View>
